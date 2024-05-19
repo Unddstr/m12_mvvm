@@ -32,36 +32,32 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel.resultSearch.observe(viewLifecycleOwner) {
-            binding.resultView.text = it
-        }
-
         binding.editText.addTextChangedListener {
             binding.searchButton.isEnabled = binding.editText.text.toString().length >= 3
         }
 
         binding.searchButton.setOnClickListener {
-            viewModel.onStartSearch()
+            viewModel.onStartSearch(binding.editText.text.toString())
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.state.collect { state ->
                 when (state) {
-                    State.NoText -> {
+                    is State.NoText -> {
                         binding.progressBar.isVisible = false
                         binding.searchButton.isEnabled = false
+                        binding.resultView.text = "Результат поиска ->"
                     }
 
-                    State.Loading -> {
+                    is State.Loading -> {
                         binding.progressBar.isVisible = true
                         binding.searchButton.isEnabled = false
                     }
 
-                    State.Success -> {
+                    is State.Success -> {
                         binding.progressBar.isVisible = false
                         binding.searchButton.isEnabled = true
-                        viewModel.resultSearch
-                            .postValue("По запросу ${binding.editText.text} ничего не найдено")
+                        binding.resultView.text = "По запросу ${state.result} ничего не найдено"
                     }
                 }
             }
